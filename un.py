@@ -10,6 +10,7 @@ Romain, Simon, Kevin
 
 import numpy as np
 import math
+from values import *
 
 def pgcd(a, b):
     """
@@ -118,27 +119,90 @@ calcAndDisplay(D)
 
 # Question 3
 """
+
+def translateAlphaToInt(st):
+    """
+    tranforme une chaine de caractere en list de int
+    """
+    res=[]
+    for e in range(len(st)):
+        if st[e] != " ":
+            res.append(alphabet[st[e]].value)
+    return res
+
+def getLetter(i):
+    """
+    return la lettre correspondant a un int
+    """
+    for c in alphabet:
+        if c.value == i:
+            return c.name
+    return ""
+
+def translateIntToAlpha(lst):
+    """
+    tranforme une list de int en chaine de caractere
+    """
+    res=""
+    for e in range(len(lst)):
+        res+=getLetter(lst[e])
+    return res
+
+#print(translateAlphaToInt("ABS DKD"))
+#print(translateIntToAlpha([0, 1, 18, 3, 10, 3]))
+
 def crypteHill(st, k):
     """
-    Permet de crypter la matrice st avec la clef k
+    Permet de crypter la chaine st avec la clef k
     """
-    pass
+    if not isInversible(k): raise Exception("Error ! invalid key !")
+
+    res=[]
+    m=len(k)
+    c=translateAlphaToInt(st)
+    while (len(c)%m != 0):
+        c.append(alphabet.A.value)
+    for e in range(int(len(c)/m)):
+        for f in range(m):
+            r=0
+            for j in range(m):
+                r+=k[f][j]*c[e*m+j]
+            res.append(r%26)
+    return translateIntToAlpha(res)
 
 def dCrypteHill(st, k):
     """
     Permet de decrypter la matrice st avec la clef k
     """
-    pass
+    if not isInversible(k): raise Exception("Error ! invalid key !")
+
+    res=[]
+    m=len(k)
+    c=translateAlphaToInt(st)
+    k=gaussJordan(np.array(k))
+    print(k) # FIXME est-ce reelement la matrice inverse la clef de dechiffrement ?
+    for e in range(int(len(c)/m)):
+        for f in range(m):
+            r=0
+            for j in range(m):
+                r+=k[f][j]*c[e*m+j]
+            res.append(r%26)
+    return translateIntToAlpha(res)
+
+print(crypteHill("ELECTION", [[9,4],[5,7]])) # = 'CTSIVVWF'
+print(dCrypteHill("CTSIVVWF", [[9,4],[5,7]])) # = 'ELECTION'
 
 def getXfirstChar(st, m):
-    N=np.zeros((m, m))
+    N=[]
+    for i in range(m):
+        N.append([])
     for i in range(m):
         for j in range(m):
-            N[j][i] = st[i*m+j]
-    return np.array(N)
+            N[j].append(st[i*m+j])
+    return N
 
 A = [0, 1, 2, 3, 4,5,6,7,8,9,10,11]
-print(getXfirstChar(A, 3))
+#print(getXfirstChar(A, 3))
 
 def CLRattak(tcy, tcl, m=2):
     """
@@ -146,55 +210,7 @@ def CLRattak(tcy, tcl, m=2):
     prend en entrer un text cyrpte, et sa version decrypte
     return la clef de cryptage
     """
-    
     pass
-
-# sur 10 000
-TOT_FREQ = 10000
-freqApp = {
-    "ES": 305,
-    "LE": 246,
-    "EN": 242,
-    "DE": 215,
-    "RE": 209,
-    "NT": 197,
-    "ON": 164,
-    "ER": 163,
-    "TE": 163,
-    "SE": 155,
-    "ET": 143,
-    "QU": 134,
-    "NE": 127,
-    "OU": 118,
-    "AI": 117,
-    "EM": 113,
-    "IT": 112,
-    "ME": 104,
-    "IS": 103,
-    "LA": 101,
-    "EC": 100,
-    "TI": 98,
-    "CE": 98,
-    "ED": 96,
-    "IE": 94,
-    "RA": 92,
-    "IN": 90,
-    "EU": 89,
-    "UR": 88,
-    "CO": 87,
-    "AR": 86,
-    "TR": 86,
-    "UE": 85,
-    "TA": 85,
-    "EP": 82,
-    "ND": 80,
-    "NS": 79,
-    "PA": 78,
-    "US": 76,
-    "SA": 75,
-    "SS": 73,
-    "AN": 30
-}
 
 def diagAttak(st, k, m=2):
     """
