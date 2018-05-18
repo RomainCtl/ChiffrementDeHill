@@ -9,6 +9,7 @@ Romain, Simon, Kevin
 """
 
 import numpy as np
+import math
 
 def pgcd(a, b):
     """
@@ -129,12 +130,23 @@ def dCrypteHill(st, k):
     """
     pass
 
+def getXfirstChar(st, m):
+    N=np.zeros((m, m))
+    for i in range(m):
+        for j in range(m):
+            N[j][i] = st[i*m+j]
+    return np.array(N)
+
+A = [0, 1, 2, 3, 4,5,6,7,8,9,10,11]
+print(getXfirstChar(A, 3))
+
 def CLRattak(tcy, tcl, m=2):
     """
     m taille suppose de la matrice
     prend en entrer un text cyrpte, et sa version decrypte
     return la clef de cryptage
     """
+    
     pass
 
 # sur 10 000
