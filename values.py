@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 
 from enum import Enum, unique
+TOT_LETTER=26
 
 @unique
 class alphabet(Enum):

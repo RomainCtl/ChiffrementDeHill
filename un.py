@@ -59,7 +59,7 @@ def isInversible(M):
     return true si une matrice est inversible
     false sinon
     """
-    return pgcd(det(M), 26) == 1
+    return pgcd(det(M), TOT_LETTER) == 1
 
 def gaussJordan(M):
     """
@@ -97,7 +97,7 @@ def calcAndDisplay(M):
     Permet de calculer et d'afficher le pgcd du det
     """
     d = det(M)
-    p = pgcd(d, 26)
+    p = pgcd(d, TOT_LETTER)
     print(M)
     print("determinant : ", d)
     print("pgcd : ", p)
@@ -167,7 +167,7 @@ def crypteHill(st, k):
             r=0
             for j in range(m):
                 r+=k[f][j]*c[e*m+j]
-            res.append(r%26)
+            res.append(r%TOT_LETTER)
     return translateIntToAlpha(res)
 
 def getInverseModX(a, x):
@@ -175,6 +175,15 @@ def getInverseModX(a, x):
         if (a*i)%x == 1:
             return i
     return -1
+
+def getInverse(m):
+    d=det(m)
+    m=gaussJordan(np.array(m))*d
+    m=(m*getInverseModX(d, TOT_LETTER))%TOT_LETTER
+    for i in range(len(m)):
+        for j in range(len(m[i])):
+            m[i][j] = round(m[i][j])
+    return m
 
 def dCrypteHill(st, k):
     """
@@ -185,19 +194,13 @@ def dCrypteHill(st, k):
     res=[]
     m=len(k)
     c=translateAlphaToInt(st)
-    d=det(k)
-    k=gaussJordan(np.array(k))*d
-    k=(k*getInverseModX(d, 26))%26
-    for i in range(len(k)):
-        for j in range(len(k[i])):
-            k[i][j] = round(k[i][j])
-    # k doit valoir [[5, 12], [15, 25]]
+    k=getInverse(k)
     for e in range(int(len(c)/m)):
         for f in range(m):
             r=0
             for j in range(m):
                 r+=k[f][j]*c[e*m+j]
-            res.append(r%26)
+            res.append(r%TOT_LETTER)
     return translateIntToAlpha(res)
 
 print(crypteHill("ELECTION", [[9,4],[5,7]])) # = 'CTSIVVWF'
@@ -212,8 +215,12 @@ def getXfirstChar(st, m):
             N[j].append(st[i*m+j])
     return N
 
-A = [0, 1, 2, 3, 4,5,6,7,8,9,10,11]
-#print(getXfirstChar(A, 3))
+#TCL = [4,11,4,2,19,8,14,13]
+#TCY = [2,19,18,8,21,21,22,5]
+#k = [[9,4],[5,7]] => [[5, 12], [15, 25]]
+TCL="ELECTION"
+TCY="CTSIVVWF"
+#print(getXfirstChar(TCL, 2))
 
 def CLRattak(tcy, tcl, m=2):
     """
@@ -221,7 +228,23 @@ def CLRattak(tcy, tcl, m=2):
     prend en entrer un text cyrpte, et sa version decrypte
     return la clef de cryptage
     """
-    pass
+    tcy=translateAlphaToInt(tcy)
+    tcl=translateAlphaToInt(tcl)
+    if (len(tcy)%m != 0): raise Exception("Warning ! len(tcy)%m != 0")
+    while (len(tcl)%m != 0):
+        tcl.append(alphabet.A.value)
+
+    if (len(tcy) != len(tcl)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
+
+    ty = getInverse(getXfirstChar(tcy, m))
+    tl = getXfirstChar(tcl, m)
+    print(tl)
+    print(ty)
+
+    c = np.array(tl).dot(np.array(ty))
+    return getInverse(c%TOT_LETTER)
+
+print(CLRattak(TCY, TCL))
 
 def diagAttak(st, k, m=2):
     """
