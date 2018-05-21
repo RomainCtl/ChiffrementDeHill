@@ -170,6 +170,12 @@ def crypteHill(st, k):
             res.append(r%26)
     return translateIntToAlpha(res)
 
+def getInverseModX(a, x):
+    for i in range (1, x):
+        if (a*i)%x == 1:
+            return i
+    return -1
+
 def dCrypteHill(st, k):
     """
     Permet de decrypter la matrice st avec la clef k
@@ -179,8 +185,13 @@ def dCrypteHill(st, k):
     res=[]
     m=len(k)
     c=translateAlphaToInt(st)
-    k=gaussJordan(np.array(k))
-    print(k) # FIXME est-ce reelement la matrice inverse la clef de dechiffrement ?
+    d=det(k)
+    k=gaussJordan(np.array(k))*d
+    k=(k*getInverseModX(d, 26))%26
+    for i in range(len(k)):
+        for j in range(len(k[i])):
+            k[i][j] = round(k[i][j])
+    # k doit valoir [[5, 12], [15, 25]]
     for e in range(int(len(c)/m)):
         for f in range(m):
             r=0
