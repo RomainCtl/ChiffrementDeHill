@@ -91,6 +91,10 @@ B= [[-1, 2],[-3, 4]]
 # res = 2
 print(det(B))
 """
+A=[[-1, 2, 5],
+   [1, 2, 3],
+   [-2, 8, 10]]
+#print(gaussJordan(np.array(A)))
 
 def calcAndDisplay(M):
     """
@@ -171,12 +175,18 @@ def crypteHill(st, k):
     return translateIntToAlpha(res)
 
 def getInverseModX(a, x):
+    """
+    return l'inverse de a (int ou float) sur Z/x (mod x)
+    """
     for i in range (1, x):
         if (a*i)%x == 1:
             return i
     return -1
 
 def getInverse(m):
+    """
+    return l'inverse de la matrice m sur Z/TOT_LETTER (26)
+    """
     d=det(m)
     m=gaussJordan(np.array(m))*d
     m=(m*getInverseModX(d, TOT_LETTER))%TOT_LETTER
@@ -195,6 +205,7 @@ def dCrypteHill(st, k):
     m=len(k)
     c=translateAlphaToInt(st)
     k=getInverse(k)
+    print(k)
     for e in range(int(len(c)/m)):
         for f in range(m):
             r=0
@@ -203,8 +214,23 @@ def dCrypteHill(st, k):
             res.append(r%TOT_LETTER)
     return translateIntToAlpha(res)
 
-print(crypteHill("ELECTION", [[9,4],[5,7]])) # = 'CTSIVVWF'
-print(dCrypteHill("CTSIVVWF", [[9,4],[5,7]])) # = 'ELECTION'
+#print(crypteHill("ELECTION", [[9,4],[5,7]])) # = 'CTSIVVWF'
+#print(dCrypteHill("CTSIVVWF", [[9,4],[5,7]])) # = 'ELECTION'
+
+"""
+t=crypteHill("ELECTION", [[1, 3, 3], [5, 3, 2], [7, 2, 5]])
+print(t)
+print(dCrypteHill(t, [[1, 3, 3], [5, 3, 2], [7, 2, 5]]))
+"""
+
+
+k=[[1, 3, 3],
+   [5, 3, 2],
+   [7, 2, 5]]
+t=crypteHill("IL ETAIT UNE FOIS LHISTOIRE DUN ADO", k)
+#print(t) # BDURHROZEJLERMRHRZHXTMZMHJKTFX
+#print(dCrypteHill(t, k)) # ILETAITUNEFOISLHISTOIREDUNADOA
+
 
 def getXfirstChar(st, m):
     N=[]
@@ -220,7 +246,10 @@ def getXfirstChar(st, m):
 #k = [[9,4],[5,7]] => [[5, 12], [15, 25]]
 TCL="ELECTION"
 TCY="CTSIVVWF"
-#print(getXfirstChar(TCL, 2))
+#print(getXfirstChar([4,11,4,2,19,8,14,13], 2))
+
+#TCL="ILETAITUNEFOISLHISTOIREDUNADOA"
+#TCY="BDURHROZEJLERMRHRZHXTMZMHJKTFX"
 
 def CLRattak(tcy, tcl, m=2):
     """
@@ -235,16 +264,25 @@ def CLRattak(tcy, tcl, m=2):
         tcl.append(alphabet.A.value)
 
     if (len(tcy) != len(tcl)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
-
+    
     ty = getInverse(getXfirstChar(tcy, m))
     tl = getXfirstChar(tcl, m)
     print(tl)
     print(ty)
 
-    c = np.array(tl).dot(np.array(ty))
+    c = np.array(tl).dot(ty)
     return getInverse(c%TOT_LETTER)
 
 print(CLRattak(TCY, TCL))
+g = np.array([[2, 19], [18, 8]])
+p = gaussJordan(g)
+#print(p)
+#print(g.dot(p))
+""" res =
+[[  5.   3.   1.]
+ [ 21.  14.  13.]
+ [ 21.  11.   4.]]
+"""
 
 def diagAttak(st, k, m=2):
     """
