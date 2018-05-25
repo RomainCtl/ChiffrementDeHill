@@ -189,7 +189,9 @@ def getInverse(m):
     """
     d=det(m)
     m=gaussJordan(np.array(m))*d
-    m=(m*getInverseModX(d, TOT_LETTER))%TOT_LETTER
+    d1 = getInverseModX(d, TOT_LETTER)
+    if d1 == -1: return None
+    m=(m*d1)%TOT_LETTER
     for i in range(len(m)):
         for j in range(len(m[i])):
             m[i][j] = round(m[i][j])
@@ -205,7 +207,6 @@ def dCrypteHill(st, k):
     m=len(k)
     c=translateAlphaToInt(st)
     k=getInverse(k)
-    print(k)
     for e in range(int(len(c)/m)):
         for f in range(m):
             r=0
@@ -232,13 +233,20 @@ t=crypteHill("IL ETAIT UNE FOIS LHISTOIRE DUN ADO", k)
 #print(dCrypteHill(t, k)) # ILETAITUNEFOISLHISTOIREDUNADOA
 
 
-def getXfirstChar(st, m):
+def getXfirstChar(st, m, args):
+    """
+    @param:
+        st: list des chiffres correspondants a des lettre
+        m: taille suppose de la matrice => la liste sera regroupe par m chiffres
+        args: liste de m position des couples souhaite
+    """
     N=[]
     for i in range(m):
         N.append([])
     for i in range(m):
         for j in range(m):
-            N[j].append(st[i*m+j])
+            #N[j].append(st[i*m+j])
+            N[j].append(st[args[i]*m+j])
     return N
 
 #TCL = [4,11,4,2,19,8,14,13]
@@ -255,23 +263,40 @@ def CLRattak(tcy, tcl, m=2):
     """
     m taille suppose de la matrice
     prend en entrer un text cyrpte, et sa version decrypte
-    return la clef de cryptage
+    return un tuple avec la clef de cryptage, et la liste des potentiels clef de cryptage trouve
     """
-    tcy=translateAlphaToInt(tcy)
-    tcl=translateAlphaToInt(tcl)
-    if (len(tcy)%m != 0): raise Exception("Warning ! len(tcy)%m != 0")
-    while (len(tcl)%m != 0):
+    res = []
+    resOk = None
+    tcy1=translateAlphaToInt(tcy)
+    tcl1=translateAlphaToInt(tcl)
+    if (len(tcy1)%m != 0): raise Exception("Warning ! len(tcy)%m != 0")
+    while (len(tcl1)%m != 0):
         tcl.append(alphabet.A.value)
 
-    if (len(tcy) != len(tcl)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
+    if (len(tcy1) != len(tcl1)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
     
-    ty = getInverse(getXfirstChar(tcy, m))
-    tl = getXfirstChar(tcl, m)
-    print(tl)
-    print(ty)
+    isok=False
+    
+    ty = getInverse(getXfirstChar(tcy1, m, [0, 1]))
+    tl = getXfirstChar(tcl1, m, [0, 1])
+    
+    while not isok:
+        if ty != None:
+            c = np.array(tl).dot(ty)
+            k = getInverse(c%TOT_LETTER)
+            if dCrypteHill(tcy, k) == tcl:
+                resOk = k
+                isok = True
+            else:
+                res.append(k)
+        
+        ty = getInverse(getXfirstChar(tcy1, m, [0, 2]))
+        tl = getXfirstChar(tcl1, m, [0, 2])
+        # TODO faire l'ago pour la liste de positions qui change a chaque passage
 
-    c = np.array(tl).dot(ty)
-    return getInverse(c%TOT_LETTER)
+    #c = np.array(tl).dot(ty)
+    #return getInverse(c%TOT_LETTER)
+    return resOk, res
 
 print(CLRattak(TCY, TCL))
 g = np.array([[2, 19], [18, 8]])
