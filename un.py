@@ -309,6 +309,8 @@ p = gaussJordan(g)
  [ 21.  11.   4.]]
 """
 
+#st => chaine de caractère crypté
+#k => 
 def diagAttak(st, k, m=2):
     """
     m taille suppose de la matrice
