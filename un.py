@@ -10,6 +10,7 @@ Romain, Simon, Kevin
 
 import numpy as np
 import math
+import itertools
 from values import *
 
 def pgcd(a, b):
@@ -197,16 +198,16 @@ def getInverse(m):
             m[i][j] = round(m[i][j])
     return m
 
-def dCrypteHill(st, k):
+def dCrypteHill(st, k, reverseKey=True):
     """
     Permet de decrypter la matrice st avec la clef k
     """
-    if not isInversible(k): raise Exception("Error ! invalid key !")
+    if reverseKey and not isInversible(k): raise Exception("Error ! invalid key !")
 
     res=[]
     m=len(k)
     c=translateAlphaToInt(st)
-    k=getInverse(k)
+    if reverseKey: k=getInverse(k)
     for e in range(int(len(c)/m)):
         for f in range(m):
             r=0
@@ -215,22 +216,12 @@ def dCrypteHill(st, k):
             res.append(r%TOT_LETTER)
     return translateIntToAlpha(res)
 
-#print(crypteHill("ELECTION", [[9,4],[5,7]])) # = 'CTSIVVWF'
-#print(dCrypteHill("CTSIVVWF", [[9,4],[5,7]])) # = 'ELECTION'
-
-"""
-t=crypteHill("ELECTION", [[1, 3, 3], [5, 3, 2], [7, 2, 5]])
-print(t)
-print(dCrypteHill(t, [[1, 3, 3], [5, 3, 2], [7, 2, 5]]))
-"""
-
-
 k=[[1, 3, 3],
    [5, 3, 2],
    [7, 2, 5]]
 t=crypteHill("IL ETAIT UNE FOIS LHISTOIRE DUN ADO", k)
-#print(t) # BDURHROZEJLERMRHRZHXTMZMHJKTFX
-#print(dCrypteHill(t, k)) # ILETAITUNEFOISLHISTOIREDUNADOA
+print(t) # BDURHROZEJLERMRHRZHXTMZMHJKTFX
+print(dCrypteHill(t, k)) # ILETAITUNEFOISLHISTOIREDUNADOA
 
 
 def getXfirstChar(st, m, args):
@@ -252,21 +243,26 @@ def getXfirstChar(st, m, args):
 #TCL = [4,11,4,2,19,8,14,13]
 #TCY = [2,19,18,8,21,21,22,5]
 #k = [[9,4],[5,7]] => [[5, 12], [15, 25]]
-TCL="ELECTION"
-TCY="CTSIVVWF"
-#print(getXfirstChar([4,11,4,2,19,8,14,13], 2))
+#TCL="ELECTION"
+#TCY="CTSIVVWF"
 
-#TCL="ILETAITUNEFOISLHISTOIREDUNADOA"
-#TCY="BDURHROZEJLERMRHRZHXTMZMHJKTFX"
+TCL="ILETAITUNEFOISLHISTOIREDUNADOA"
+TCY="BDURHROZEJLERMRHRZHXTMZMHJKTFX"
 
 def CLRattak(tcy, tcl, m=2):
     """
     m taille suppose de la matrice
     prend en entrer un text cyrpte, et sa version decrypte
-    return un tuple avec la clef de cryptage, et la liste des potentiels clef de cryptage trouve
+    return un tuple:
+        - la clef de cryptage
+        - la clef de decryptage
+        - liste de toutes les autres clefs de cryptage trouve
+        - liste de toutes les autres clefs de decryptage trouve
     """
-    res = []
-    resOk = None
+    cryptRes = []
+    dcryptRes = []
+    cryptResOk = None
+    dcryptResOk = None
     tcy1=translateAlphaToInt(tcy)
     tcl1=translateAlphaToInt(tcl)
     if (len(tcy1)%m != 0): raise Exception("Warning ! len(tcy)%m != 0")
@@ -274,35 +270,42 @@ def CLRattak(tcy, tcl, m=2):
         tcl.append(alphabet.A.value)
 
     if (len(tcy1) != len(tcl1)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
-    
-    isok=False
-    
-    ty = getInverse(getXfirstChar(tcy1, m, [0, 1]))
-    tl = getXfirstChar(tcl1, m, [0, 1])
-    
-    while not isok:
-        if ty != None:
-            c = np.array(tl).dot(ty)
-            k = getInverse(c%TOT_LETTER)
-            if dCrypteHill(tcy, k) == tcl:
-                resOk = k
-                isok = True
+
+    # creation de la liste de toutes les possibilite de combinaison des positions
+    li=[]
+    for n in range(int(len(tcy)/m)):
+        li.append(n)
+    possibility = list(itertools.combinations(li, m))
+
+    # cherche la clef
+    ty = getInverse(getXfirstChar(tcy1, m, possibility[0]))
+    tl = getXfirstChar(tcl1, m, possibility[0])
+
+    for i in range(1, len(possibility)):
+        if ty is not None:
+            c = np.array(tl).dot(ty)%TOT_LETTER
+            k = getInverse(c)
+            if k is not None:
+                if dCrypteHill(tcy, k) == tcl:
+                    cryptResOk = k
+                    dcryptResOk = c
+                    break
+                else:
+                    cryptRes.append(k)
             else:
-                res.append(k)
+                if dCrypteHill(tcy, c, False) == tcl:
+                    dcryptResOk = c
+                    break
+                else:
+                    dcryptRes.append(c)
         
-        ty = getInverse(getXfirstChar(tcy1, m, [0, 2]))
-        tl = getXfirstChar(tcl1, m, [0, 2])
-        # TODO faire l'ago pour la liste de positions qui change a chaque passage
+        ty = getInverse(getXfirstChar(tcy1, m, possibility[i]))
+        tl = getXfirstChar(tcl1, m, possibility[i])
 
-    #c = np.array(tl).dot(ty)
-    #return getInverse(c%TOT_LETTER)
-    return resOk, res
+    return cryptResOk, dcryptResOk, cryptRes, dcryptRes
 
-print(CLRattak(TCY, TCL))
-g = np.array([[2, 19], [18, 8]])
-p = gaussJordan(g)
-#print(p)
-#print(g.dot(p))
+print(CLRattak(TCY, TCL, 3))
+#print(getInverse(k))
 """ res =
 [[  5.   3.   1.]
  [ 21.  14.  13.]
