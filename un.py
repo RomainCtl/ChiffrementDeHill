@@ -313,6 +313,19 @@ TCY = crypteHill(TCL, k)
 print(TCY)
 #print(CLRattak(TCY, TCL))
 
+
+def correspondanceFrancais(string):
+    nbmots = 0
+    for x in reversed(dico):
+        if len(string) < 2:
+            return nbmots
+            break
+        else :
+            if x in string:
+                string = string.replace(x,"")
+                nbmots = nbmots + 1
+    return 0
+
 def maxCount(liste):
     maxi = {'count': 0}
     n=-1
@@ -390,5 +403,4 @@ def diagAttak(st, m=2):
 
 
 print(diagAttak(TCY))
-
 
