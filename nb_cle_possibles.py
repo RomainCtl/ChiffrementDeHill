@@ -7,8 +7,7 @@ Created on Fri May 25 11:58:17 2018
 
 import numpy as np
 from values import *
-from un import *
-import itertools
+from un import det
 import math
 
 
@@ -40,7 +39,7 @@ def nb_cle_hill(m=2):
             for y in range(m):
                 M[x].append(comb[x*m+y])
             
-        if(isInversible(M)):
+        if(det(M)!=0 and isInversible(M)):
             nb_inversible += 1
             
     return nb_inversible
