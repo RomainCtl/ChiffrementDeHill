@@ -74,9 +74,10 @@ def gaussJordan(M):
             A[c]=A[c]/A[c,c]
         else :
             pivot=0
-            while A[pivot,c]==0:
+            while pivot<len(A)-1 and A[pivot,c]==0:
                 pivot=pivot+1
-            A[c]=A[c]+A[pivot]/A[pivot,c]
+            if A[pivot,c]!=0: A[c]=A[c]+A[pivot]/A[pivot,c]
+            else: A[c]=A[c]+A[pivot]
         for l in range(0,n):
             if c!=l :
                 A[l]=A[l]-A[l,c]*A[c]
@@ -274,7 +275,7 @@ def CLRattak(tcy, tcl, m=2):
     ty = getInverse(getXfirstChar(tcy1, m, possibility[0]))
     tl = getXfirstChar(tcl1, m, possibility[0])
 
-    for i in range(1, len(possibility)):
+    for i in range(len(possibility)):
         if ty is not None:
             c = np.array(tl).dot(ty)%TOT_LETTER
             k = getInverse(c)
@@ -297,7 +298,7 @@ def CLRattak(tcy, tcl, m=2):
 
     return cryptResOk, dcryptResOk, cryptRes, dcryptRes
 
-print(CLRattak(TCY, TCL, 3))
+#print(CLRattak(TCY, TCL, 3))
 """ res =
 [[  5.   3.   1.]
  [ 21.  14.  13.]
@@ -310,8 +311,6 @@ TCL = "BONJOUR JE SUIS UN ETUDIANT EN INFORMATIQUE ET JESSAYE DE DECRYPTE CE COD
 #"BO NJ OU RJ ES UI SU NE TU DI AN TE NI NF OR MA TI QU EE TJ ES SA YE DE DE CR YP TE CE CO DE"
 #"NZ XY YC HS EQ EA IW DP RB HT AN FT TR HW MH EI VV QM AW ZC EQ GM YS RR RR IZ QR FT IM WE RR"
 TCY = crypteHill(TCL, k)
-print(TCY)
-#print(CLRattak(TCY, TCL))
 
 
 def correspondanceFrancais(string):
@@ -347,6 +346,11 @@ def combinaisons(l, size, n):
         combinaison.append(l[int(n/math.pow(len(l), x)%len(l))])
     return combinaison
 
+def verifkey(cryptkey, dcryptkey, tcy):
+    if cryptkey is not None: return dCrypteHill(tcy, k)
+    else: return dCrypteHill(tcy, c, False)
+    
+
 #st => chaine de caractère crypté
 def diagAttak(st, m=2):
     """
@@ -369,38 +373,67 @@ def diagAttak(st, m=2):
     res=[{'tuple': i, 'count': c} for i, c in collections.Counter(reg).items()]
     res.sort(key= lambda i: i['count'], reverse=True)
     
-    if res != []:
-        # on trie la liste par order decroissant
-        nres=[res[e]['tuple'] for e in range(len(res))]
-        del res
-        nres = list(itertools.combinations(nres, m))
-        
-        #
-        freq = [list(freqApp)[i].name for i in range(len(freqApp))]
-        possibility = list(itertools.combinations(freq, m))
-        for j in range(len(nres)):
-            tcy=""
-            for p in range(m):
-                tcy += translateIntToAlpha(nres[j][p])
+    if res == []: return None
     
-            r=[]
-            for i in range(len(possibility)):
-                tcl = "".join(possibility[i])
-                crykey, dcrykey, cryl, dcryl = CLRattak(tcy, tcl)
-                if crykey is not None or dcrykey is not None:
-                    print(tcl, tcy)
-                    print(i, crykey, dcrykey, cryl, dcryl)
-                    break
-                elif cryl != [] or dcryl != []:
-                    print(tcl, tcy)
-                    print(i, cryl, dcryl)
-                    break
-        
-    else:
-        # 
-        pass
-    return None
+    # on trie la liste par order decroissant
+    nres=[res[e]['tuple'] for e in range(len(res))]
+    del res
+    nres = list(itertools.combinations(nres, m))
+    
+    #
+    freq = [list(freqApp)[i].name for i in range(len(freqApp))]
+    possibility = list(itertools.combinations(freq, m))
+    r={}
+    for j in range(len(nres)):
+        tcy=""
+        for p in range(m):
+            tcy += translateIntToAlpha(nres[j][p])
+
+        for i in range(len(possibility)):
+            tcl = "".join(possibility[i])
+            crykey, dcrykey, cryl, dcryl = CLRattak(tcy, tcl)
+            if crykey is not None or dcrykey is not None:
+                print(tcl, tcy)
+                print(i, crykey, dcrykey)
+                if str((crykey, dcrykey)) in r:
+                    r[str((crykey, dcrykey))]['weight'] += 1
+                    r[str((crykey, dcrykey))]['cryptlist'].extend(cryl)
+                    r[str((crykey, dcrykey))]['decryptlist'].extend(dcryl)
+                else:
+                    r[str((crykey, dcrykey))] = {
+                        'weight': 1,
+                        'cryptkey': crykey,
+                        'decryptkey': dcrykey,
+                        'cryptlist': cryl,
+                        'decryptlist': dcryl
+                        }
+                # TODO lorsquon a une key, la verif avec d'autre elem de la chaine
+                # TODO faire des stats sur les key trouve et prendre celle qui est le plus presente ?
+                if crykey is not None:
+                    print(dCrypteHill(st, crykey))
+                else:
+                    print(dCrypteHill(st, dcrykey, False))
+            elif cryl != [] or dcryl != []:
+                if str((None, None)) in r:
+                    r[str((None, None))]['cryptlist'].extend(cryl)
+                    r[str((None, None))]['decryptlist'].extend(dcryl)
+                else:
+                    r[str((None, None))] = {
+                        'weight': 1,
+                        'cryptkey': crykey,
+                        'decryptkey': dcrykey,
+                        'cryptlist': cryl,
+                        'decryptlist': dcryl
+                        }
+
+    # stats
+    sorted_r = sorted(r.items(), key=lambda e: e[1]['weight'], reverse=True)
+    for s in sorted_r:
+        print(s)
+    
+    return r
 
 
 print(diagAttak(TCY))
+#print(CLRattak("RRHS", "ENSA"))
 
