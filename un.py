@@ -11,6 +11,7 @@ Romain, Simon, Kevin
 import numpy as np
 import math
 import itertools
+import collections
 from values import *
 
 def pgcd(a, b):
@@ -92,10 +93,6 @@ B= [[-1, 2],[-3, 4]]
 # res = 2
 print(det(B))
 """
-A=[[-1, 2, 5],
-   [1, 2, 3],
-   [-2, 8, 10]]
-#print(gaussJordan(np.array(A)))
 
 def calcAndDisplay(M):
     """
@@ -153,9 +150,6 @@ def translateIntToAlpha(lst):
         res+=getLetter(lst[e])
     return res
 
-#print(translateAlphaToInt("ABS DKD"))
-#print(translateIntToAlpha([0, 1, 18, 3, 10, 3]))
-
 def crypteHill(st, k):
     """
     Permet de crypter la chaine st avec la clef k
@@ -177,7 +171,7 @@ def crypteHill(st, k):
 
 def getInverseModX(a, x):
     """
-    return l'inverse de a (int ou float) sur Z/x (mod x)
+    return l'inverse de a (int ou float) sur Z/x (mod x) (ou -1 si pas d'inverse)
     """
     for i in range (1, x):
         if (a*i)%x == 1:
@@ -216,14 +210,6 @@ def dCrypteHill(st, k, reverseKey=True):
             res.append(r%TOT_LETTER)
     return translateIntToAlpha(res)
 
-k=[[1, 3, 3],
-   [5, 3, 2],
-   [7, 2, 5]]
-t=crypteHill("IL ETAIT UNE FOIS LHISTOIRE DUN ADO", k)
-print(t) # BDURHROZEJLERMRHRZHXTMZMHJKTFX
-print(dCrypteHill(t, k)) # ILETAITUNEFOISLHISTOIREDUNADOA
-
-
 def getXfirstChar(st, m, args):
     """
     @param:
@@ -236,7 +222,6 @@ def getXfirstChar(st, m, args):
         N.append([])
     for i in range(m):
         for j in range(m):
-            #N[j].append(st[i*m+j])
             N[j].append(st[args[i]*m+j])
     return N
 
@@ -272,9 +257,7 @@ def CLRattak(tcy, tcl, m=2):
     if (len(tcy1) != len(tcl1)): raise Exception("Error ! le text crypté et decrypté ne font pas la meme taille !")
 
     # creation de la liste de toutes les possibilite de combinaison des positions
-    li=[]
-    for n in range(int(len(tcy)/m)):
-        li.append(n)
+    li=range(int(len(tcy)/m))
     possibility = list(itertools.combinations(li, m))
 
     # cherche la clef
@@ -304,20 +287,77 @@ def CLRattak(tcy, tcl, m=2):
 
     return cryptResOk, dcryptResOk, cryptRes, dcryptRes
 
-print(CLRattak(TCY, TCL, 3))
-#print(getInverse(k))
+#print(CLRattak(TCY, TCL, 3))
 """ res =
 [[  5.   3.   1.]
  [ 21.  14.  13.]
  [ 21.  11.   4.]]
 """
 
+
+k = [[9,4],[5,7]]
+TCL = "BONJOUR JE SUIS UN ETUDIANT EN INFORMATIQUE ET JESSAYE DE DECRYPTE CE CODE"
+TCY = crypteHill(TCL, k)
+print(TCY)
+
+def maxCount(liste):
+    maxi = {'count': 0}
+    n=-1
+    for i in range(len(liste)):
+        if liste[i]['count'] > maxi['count']:
+            maxi = liste[i]
+            n=i
+    return maxi, n
+
 #st => chaine de caractère crypté
-#k => 
-def diagAttak(st, k, m=2):
+def diagAttak(st, m=2):
     """
-    m taille suppose de la matrice
-    prend en entrer un text cyrpte
-    return la clef de cryptage
+    @param:
+        m : int, taille suppose de la matrice
+        st: string, texte crypte
+    @return:
+        la clef de cryptage ou de decryptage
     """
-    pass
+    ty=translateAlphaToInt(st)
+    # regroupe par m les lettres
+    reg=[]
+    for i in range(int(len(ty)/m)):
+        tmp=[]
+        for j in range(m):
+            tmp.append(ty[i*m+j])
+        reg.append(tuple(tmp))
+    
+    #cherche les tuples en double ou plus
+    res=[]
+    n=0
+    for i, c in collections.Counter(reg).items():
+        n+=1
+        if c > 1:
+            res.append({'tuple': i, 'count': c, 'position': n})
+    
+    if res != []:
+        # on trie la liste par order decroissant
+        nres=[]
+        for e in range(len(res)):
+            m, n = maxCount(res)
+            nres.append(m)
+            del res[n]
+            e-=1
+        
+        # 
+        freq = list(freqApp)
+        possibility = list(itertools.combinations(range(len(freq)), m))
+        print(possibility)
+        r=[]
+        for i in range(len(freq)):
+            pass
+        
+    else:
+        # sdgf
+        pass
+    return res
+
+
+print(diagAttak(TCY))
+
+
