@@ -43,11 +43,3 @@ def nb_cle_hill(m=2):
             nb_inversible += 1
             
     return nb_inversible
-    
-    
-    
-
-"""
-Max de clé possible pour un code Hill 2x2
-"""
-

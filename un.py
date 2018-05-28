@@ -346,8 +346,8 @@ def diagAttak(st, m=2):
         
         # 
         freq = list(freqApp)
-        possibility = list(itertools.combinations(range(len(freq)), m))
-        print(possibility)
+        #possibility = list(itertools.combinations(range(len(freq)), m))
+        #print(possibility)
         r=[]
         for i in range(len(freq)):
             pass
