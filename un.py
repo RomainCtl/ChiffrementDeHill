@@ -122,6 +122,14 @@ calcAndDisplay(D)
 # Question 3
 """
 
+def delspace(st):
+    """
+    @return:
+        le string st sans espace
+    """
+    tmp = st.split(" ")
+    return "".join(tmp)
+
 def translateAlphaToInt(st):
     """
     tranforme une chaine de caractere en list de int
@@ -244,6 +252,8 @@ def CLRattak(tcy, tcl, m=2):
         - liste de toutes les autres clefs de cryptage trouve
         - liste de toutes les autres clefs de decryptage trouve
     """
+    tcy = delspace(tcy)
+    tcl = delspace(tcl)
     cryptRes = []
     dcryptRes = []
     cryptResOk = None
@@ -287,7 +297,7 @@ def CLRattak(tcy, tcl, m=2):
 
     return cryptResOk, dcryptResOk, cryptRes, dcryptRes
 
-#print(CLRattak(TCY, TCL, 3))
+print(CLRattak(TCY, TCL, 3))
 """ res =
 [[  5.   3.   1.]
  [ 21.  14.  13.]
@@ -297,8 +307,11 @@ def CLRattak(tcy, tcl, m=2):
 
 k = [[9,4],[5,7]]
 TCL = "BONJOUR JE SUIS UN ETUDIANT EN INFORMATIQUE ET JESSAYE DE DECRYPTE CE CODE"
+#"BO NJ OU RJ ES UI SU NE TU DI AN TE NI NF OR MA TI QU EE TJ ES SA YE DE DE CR YP TE CE CO DE"
+#"NZ XY YC HS EQ EA IW DP RB HT AN FT TR HW MH EI VV QM AW ZC EQ GM YS RR RR IZ QR FT IM WE RR"
 TCY = crypteHill(TCL, k)
 print(TCY)
+#print(CLRattak(TCY, TCL))
 
 def maxCount(liste):
     maxi = {'count': 0}
@@ -308,6 +321,18 @@ def maxCount(liste):
             maxi = liste[i]
             n=i
     return maxi, n
+
+def combinaisons(l, size, n):
+    """
+    @param:
+        l: list des element
+        size: taille de la combinaison
+        n: position de la combinaison
+    """
+    combinaison = []
+    for x in range(size):
+        combinaison.append(l[int(n/math.pow(len(l), x)%len(l))])
+    return combinaison
 
 #st => chaine de caractère crypté
 def diagAttak(st, m=2):
@@ -328,34 +353,40 @@ def diagAttak(st, m=2):
         reg.append(tuple(tmp))
     
     #cherche les tuples en double ou plus
-    res=[]
-    n=0
-    for i, c in collections.Counter(reg).items():
-        n+=1
-        if c > 1:
-            res.append({'tuple': i, 'count': c, 'position': n})
+    res=[{'tuple': i, 'count': c} for i, c in collections.Counter(reg).items()]
+    res.sort(key= lambda i: i['count'], reverse=True)
     
     if res != []:
         # on trie la liste par order decroissant
-        nres=[]
-        for e in range(len(res)):
-            m, n = maxCount(res)
-            nres.append(m)
-            del res[n]
-            e-=1
+        nres=[res[e]['tuple'] for e in range(len(res))]
+        del res
+        nres = list(itertools.combinations(nres, m))
         
-        # 
-        freq = list(freqApp)
-        possibility = list(itertools.combinations(range(len(freq)), m))
-        print(possibility)
-        r=[]
-        for i in range(len(freq)):
-            pass
+        #
+        freq = [list(freqApp)[i].name for i in range(len(freqApp))]
+        possibility = list(itertools.combinations(freq, m))
+        for j in range(len(nres)):
+            tcy=""
+            for p in range(m):
+                tcy += translateIntToAlpha(nres[j][p])
+    
+            r=[]
+            for i in range(len(possibility)):
+                tcl = "".join(possibility[i])
+                crykey, dcrykey, cryl, dcryl = CLRattak(tcy, tcl)
+                if crykey is not None or dcrykey is not None:
+                    print(tcl, tcy)
+                    print(i, crykey, dcrykey, cryl, dcryl)
+                    break
+                elif cryl != [] or dcryl != []:
+                    print(tcl, tcy)
+                    print(i, cryl, dcryl)
+                    break
         
     else:
-        # sdgf
+        # 
         pass
-    return res
+    return None
 
 
 print(diagAttak(TCY))
